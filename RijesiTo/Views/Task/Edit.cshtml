@@ -1,0 +1,58 @@
+﻿@model RijesiTo.Models.Task  
+
+@using TaskStatus = RijesiTo.Models.TaskStatus  
+
+@{  
+    ViewData["Title"] = "Edit Task";  
+}  
+
+<h2>Edit Task</h2>  
+
+<form asp-action="Edit" method="post">  
+    <input type="hidden" asp-for="Id" />  
+
+    <div asp-validation-summary="ModelOnly" class="text-danger"></div>  
+
+    <div class="form-group mb-2">  
+        <label asp-for="Title"></label>  
+        <input asp-for="Title" class="form-control" />  
+        <span asp-validation-for="Title" class="text-danger"></span>  
+    </div>  
+
+    <div class="form-group mb-2">  
+        <label asp-for="Description"></label>  
+        <textarea asp-for="Description" class="form-control"></textarea>  
+        <span asp-validation-for="Description" class="text-danger"></span>  
+    </div>  
+
+    <div class="form-group mb-2">  
+        <label asp-for="Location"></label>  
+        <input asp-for="Location" class="form-control" />  
+        <span asp-validation-for="Location" class="text-danger"></span>  
+    </div>  
+
+    <div class="form-group mb-2">  
+        <label asp-for="DateTime"></label>  
+        <input asp-for="DateTime" class="form-control" type="datetime-local" />  
+        <span asp-validation-for="DateTime" class="text-danger"></span>  
+    </div>  
+
+    <div class="form-group mb-2">  
+        <label asp-for="DepositAmount"></label>  
+        <input asp-for="DepositAmount" class="form-control" />  
+        <span asp-validation-for="DepositAmount" class="text-danger"></span>  
+    </div>  
+
+    <div class="form-group mb-3">  
+        <label asp-for="Status"></label>  
+        <select asp-for="Status" class="form-control">  
+            <option value="@TaskStatus.NotStarted">Not Started</option>  
+            <option value="@TaskStatus.InProgress">In Progress</option>
+            <option value="@TaskStatus.Completed">Completed</option>
+        </select>  
+        <span asp-validation-for="Status" class="text-danger"></span>  
+    </div>  
+
+    <button type="submit" class="btn btn-primary">Save Changes</button>  
+    <a asp-action="Index" class="btn btn-secondary">Cancel</a>  
+</form>

@@ -1,0 +1,29 @@
+﻿@using RijesiTo.ViewModels
+@model List<OfferViewModel>
+
+<h2>Offers</h2>
+
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Task</th>
+            <th>Client</th>
+            <th>Date</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var offer in Model)
+        {
+            <tr>
+                <td>@offer.TaskTitle</td>
+                <td>@offer.UserName</td>
+                <td>@offer.OfferDate.ToLocalTime().ToString("g")</td>
+                <td>
+                    <a class='action-link' asp-action="Details" title="Show offer details" asp-route-id="@offer.Id"><i class="fas fa-info-circle"></i></a> |
+                    <a class='action-link' asp-action="Delete" title="Delete offer" asp-route-id="@offer.Id"><i class="fas fa-trash"></i></a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

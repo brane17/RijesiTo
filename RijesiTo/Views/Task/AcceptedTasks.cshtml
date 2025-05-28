@@ -1,0 +1,45 @@
+﻿<div class="row">
+    <div class="col-md-10">
+        <h2>Accepted Tasks</h2>
+    </div>
+</div>
+<script>
+    async function loadTasks() {
+        const response = await fetch('/Task/GetAcceptedTasks');
+        const tasks = await response.json();
+
+        const container = document.getElementsByTagName('tbody')[0];
+        container.innerHTML = ''; // cbriši postojeće
+
+        tasks.forEach(task => {
+            let status = getTaskStatusText(task.status);
+            container.innerHTML += `
+            <tr>
+               <td>${task.title}</td>
+               <td>${task.location}</td>
+               <td>${status}</td>
+               <td>
+                    <a class='action-link' href='../Task/Details/${task.id}' title="View task details" href='#'><i class="fas fa-info-circle"></i></a>
+               </td>
+            </tr>
+            `;
+        });
+    }
+
+    // Poziv load
+    loadTasks();
+</script>
+
+
+
+<table id="tasks-table" class="table">
+    <thead>
+        <tr>
+            <th>Title</th>
+            <th>Location</th>
+            <th>Status</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody></tbody>
+</table>

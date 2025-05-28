@@ -1,0 +1,50 @@
+﻿<div class="row">
+    <div class="col-md-10">
+        <h2>All Tasks</h2>
+    </div>
+    <div class="col-md-2">
+        <a class="btn btn-primary" asp-controller="Task" asp-action="Create">Create New Task</a>
+    </div>
+</div>
+<script>
+    async function loadTasks() {
+        const response = await fetch('/Task/GetTasks');
+        const tasks = await response.json();
+
+        const container = document.getElementsByTagName('tbody')[0];
+        container.innerHTML = ''; // obriši postojeće
+
+        tasks.forEach(task => {
+            let status = getTaskStatusText(task.status);
+            container.innerHTML += `
+            <tr>
+               <td>${task.title}</td>
+               <td>${task.location}</td>
+               <td>${status}</td>
+               <td>
+                    <a class='action-link' href='Task/Edit/${task.id}' title="Edit task" href='#'><i class="fas fa-edit"></i></a>
+                    <a class='action-link' href='Task/Details/${task.id}' title="View task details" href='#'><i class="fas fa-info-circle"></i></a>
+                    <a class='action-link' href='Task/Delete/${task.id}' title="Delete task" href='#'><i class="fas fa-trash"></i></a>
+               </td>
+            </tr>
+            `;
+        });
+    }
+
+    // Call on load
+    loadTasks();
+</script>
+
+
+
+<table id="tasks-table" class="table">
+    <thead>
+        <tr>
+            <th>Title</th>
+            <th>Location</th>
+            <th>Status</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody></tbody>
+</table>

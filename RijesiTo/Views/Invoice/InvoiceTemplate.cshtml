@@ -1,0 +1,81 @@
+﻿@using RijesiTo.ViewModels
+@model TaskInvoiceViewModel
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>Task Invoice</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            margin: 40px;
+            color: #333;
+        }
+
+        .invoice-box {
+            max-width: 800px;
+            padding: 30px;
+            border: 1px solid #eee;
+            box-shadow: 0 0 10px rgba(0, 0, 0, .15);
+            line-height: 24px;
+        }
+
+        h2 {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #2E86C1;
+        }
+
+        .info-section {
+            margin-bottom: 20px;
+        }
+
+        .info-label {
+            font-weight: bold;
+            width: 200px;
+            display: inline-block;
+        }
+
+        .footer {
+            margin-top: 40px;
+            font-size: 14px;
+            text-align: center;
+            color: #888;
+        }
+
+        .highlight {
+            background-color: #f7f7f7;
+            padding: 10px;
+            border-left: 4px solid #2E86C1;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="invoice-box">
+        <h2>Task Completion Invoice</h2>
+
+        <div class="info-section">
+            <div><span class="info-label">Task Title:</span> @Model.TaskTitle</div>
+            <div><span class="info-label">Location:</span> @Model.Location</div>
+            <div><span class="info-label">Task Date:</span> @Model.TaskDate.ToString("MMMM dd, yyyy - h:mm tt")</div>
+        </div>
+
+        <div class="info-section">
+            <div><span class="info-label">Deposit Amount:</span>€@Model.DepositAmount.ToString("F2")</div>
+            <div><span class="info-label">Status:</span> Closed</div>
+        </div>
+
+        <div class="info-section highlight">
+            <div><span class="info-label">Requester:</span> @Model.RequesterName</div>
+            <div><span class="info-label">Email:</span> @Model.RequesterEmail</div>
+        </div>
+
+        <div class="footer">
+            This is an automatically generated invoice for record-keeping purposes.
+            <br />
+            Thank you for using our service!
+        </div>
+    </div>
+</body>
+</html>

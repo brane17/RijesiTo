@@ -1,0 +1,86 @@
+﻿@using RijesiTo.ViewModels
+@model ReviewViewModel
+
+<h3>Leave a Review</h3>
+
+<div id="review-form">
+    <input type="hidden" id="taskId" value="@Model.TaskId" />
+
+    <div class="mb-2">
+        <label>Rating</label>
+        <div id="stars">
+            @for (int i = 1; i <= 5; i++)
+            {
+                <span class="star" data-value="@i">&#9733;</span>
+            }
+        </div>
+    </div>
+
+    <div class="mb-3">
+        <label for="comment">Comment</label>
+        <textarea id="comment" class="form-control" rows="3"></textarea>
+    </div>
+
+    <button id="submit-review" class="btn btn-primary">Submit Review</button>
+</div>
+
+<style>
+    .star {
+        font-size: 2rem;
+        color: gray;
+        cursor: pointer;
+    }
+
+        .star.selected {
+            color: gold;
+        }
+</style>
+
+
+<script>
+    let selectedRating = 0;
+
+    document.querySelectorAll('.star').forEach(star => {
+        star.addEventListener('click', function () {
+            selectedRating = parseInt(this.getAttribute('data-value'));
+
+            document.querySelectorAll('.star').forEach(s => {
+                s.classList.remove('selected');
+            });
+
+            for (let i = 1; i <= selectedRating; i++) {
+                document.querySelector(`.star[data-value="${i}"]`).classList.add('selected');
+            }
+        });
+    });
+
+        document.getElementById("submit-review").addEventListener("click", async () => {
+        const taskId = document.getElementById("taskId").value;
+        const comment = document.getElementById("comment").value;
+
+        if (selectedRating < 1) {
+            alert("Please select a rating.");
+            return;
+        }
+
+        const payload = {
+            taskId: parseInt(taskId),
+            rating: selectedRating,
+            comment: comment
+        };
+
+        const response = await fetch("/Review/SubmitAjax", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload)
+        });
+
+        if (response.ok) {
+            alert("Review submitted!");
+            document.getElementById("review-form").innerHTML = "<p>✅ Thank you for your review.</p>";
+        } else {
+            const err = await response.text();
+            alert("Error: " + err);
+        }
+    });
+</script>

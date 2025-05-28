@@ -1,0 +1,17 @@
+﻿@using RijesiTo.ViewModels
+@model OfferViewModel
+<h2>Offer Details</h2>
+
+<dl class="row">
+    <dt class="col-sm-3">Task</dt>
+    <dd class="col-sm-9">@Model.TaskTitle</dd>
+
+    <dt class="col-sm-3">User</dt>
+    <dd class="col-sm-9">@Model.UserName</dd>
+
+    <dt class="col-sm-3">Date</dt>
+    <dd class="col-sm-9">@Model.OfferDate.ToLocalTime().ToString("g")</dd>
+
+    <dt class="col-sm-3">Offer Status</dt>
+    <dd class="col-sm-9">@Model.OfferStatus</dd>
+</dl>

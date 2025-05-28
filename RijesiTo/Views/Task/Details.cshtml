@@ -1,0 +1,293 @@
+﻿@model RijesiTo.ViewModels.TaskViewModel
+
+@{
+    ViewData["Title"] = "Task Details";
+    var downloadInvoiceButtonDisplayClass = Model.Status == RijesiTo.Models.TaskStatus.Completed ? "d-block" : "d-none";
+}
+
+<div class="row">
+    <div class="col-md-10">
+        <h2>Task Details</h2>
+    </div>
+    <div class="col-md-2">
+        @if (Context.Session.GetString("UserRole") == UserRole.Worker.ToString() && Model.Status == RijesiTo.Models.TaskStatus.InProgress)
+        {
+            <button id="finish-btn" onclick="markAsFinished(@Model.Id)" class="btn btn-success">Mark as Finished</button>
+        }
+        else if (Context.Session.GetString("UserRole") == UserRole.Client.ToString() && Model.Status == RijesiTo.Models.TaskStatus.Finished)
+        {
+            <button id="complete-btn" onclick="approveCompletion(@Model.Id)" class="btn btn-primary">Mark as Completed</button>
+        }
+
+
+        <a id="invoice-download-btn" asp-controller="Invoice" asp-action="Download" asp-route-taskId="@Model.Id" class="btn btn-outline-primary @downloadInvoiceButtonDisplayClass">
+            Download Invoice (PDF)
+        </a>
+
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body">
+
+        <dl class="row">
+            <dt class="col-sm-3">Title</dt>
+            <dd class="col-sm-9">@Model.Title</dd>
+
+            <dt class="col-sm-3">Description</dt>
+            <dd class="col-sm-9">@Model.Description</dd>
+
+            <dt class="col-sm-3">Location</dt>
+            <dd class="col-sm-9">@Model.Location</dd>
+
+            <dt class="col-sm-3">Date</dt>
+            <dd class="col-sm-9">@Model.DateTime.ToString("g")</dd>
+
+            <dt class="col-sm-3">Deposit Amount</dt>
+            <dd class="col-sm-9">€@Model.DepositAmount</dd>
+
+            <dt class="col-sm-3">Status</dt>
+            <dd id="task-status-text" class="col-sm-9">
+                @Model.Status
+            </dd>
+        </dl>
+        <p id="task-status-msg">
+            @{
+                if (Model.Status == RijesiTo.Models.TaskStatus.Finished && Context.Session.GetString("UserRole") == UserRole.Worker.ToString())
+                {
+                    <em>Waiting for client approval...</em>
+                }
+                else if (Model.Status == RijesiTo.Models.TaskStatus.Completed && Context.Session.GetString("UserRole") == UserRole.Client.ToString())
+                {
+                    <em>Task completed. Invoice available to download.</em>
+
+                }
+            }
+        </p>
+
+        <a asp-action="Index" class="btn btn-secondary">Back to List</a>
+        @if (Model.Status == RijesiTo.Models.TaskStatus.Completed && Model.AllowReview)
+        {
+            <a asp-controller="Review" asp-action="Leave" asp-route-taskId="@Model.Id" class="btn btn-outline-success">
+                Leave a Review
+            </a>
+        }
+
+    </div>
+</div>
+<script>
+    const taskId = @Model.Id;
+</script>
+@if (Context.Session.GetString("UserRole") == UserRole.Client.ToString())
+{
+    <h4>Offers for This Task</h4>
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>User</th>
+                <th>Date</th>
+                <th>Status</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody id="offer-body">
+            <tr><td colspan="4">Loading offers...</td></tr>
+        </tbody>
+    </table>
+    <script>
+        async function loadOffers() {
+            const res = await fetch(`/Offer/GetByTask/${taskId}`);
+            const offers = await res.json();
+            updateOfferTable(offers);
+        }
+
+        function updateOfferTable(data) {
+            const tbody = document.getElementById("offer-body");
+            tbody.innerHTML = "";
+
+            if (data.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="4" class="text-center">No offers yet.</td></tr>`;
+                return;
+            }
+
+            data.forEach(offer => {
+                const row = document.createElement("tr");
+                let status = getOfferStatusText(offer.offerStatus);
+                let acceptOfferBtnState = offer.isAnyOfferAccepted ? 'pointer-events: none; opacity: 0.7' : 'pointer-events: auto; opacity: 1';
+                let onclickEvent = offer.isAnyOfferAccepted ? 'return false' : `acceptOffer(${offer.id}, this)`;
+                row.innerHTML = `
+                    <td>${offer.userName}</td>
+                    <td>${new Date(offer.offerDate).toLocaleString()}</td>
+                    <td>${status}</td>
+                    <td><span style='cursor: pointer; ${acceptOfferBtnState}' title='Accept offer' onclick='${onclickEvent}'><i class='fas fa-check'></i></span></td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        // Početno opterećenje
+        loadOffers();
+
+        // Neobavezno: Osvježi svakih 10 sekundi
+        setInterval(loadOffers, 10000);
+
+       async function acceptOffer(offerId, ele) {
+            const offer = {
+                Id: offerId,
+                OfferStatus: 1
+            };
+
+            const res = await fetch('/Offer/UpdateOfferStatus', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(offer)
+            });
+
+            if (res.ok) {
+                alert("Offer accepted!");
+            } else {
+                alert("Error accepting task.");
+            }
+        }
+    </script>
+}
+
+
+
+<h4>Task Reviews</h4>
+
+<table class="table table-sm table-striped">
+    <thead>
+        <tr>
+            <th>Reviewer Type</th>
+            <th>Reviewer</th>
+            <th>Rating</th>
+            <th>Comment</th>
+            <th>Date</th>
+        </tr>
+    </thead>
+    <tbody id="review-body">
+        <tr><td colspan="4">Loading reviews...</td></tr>
+    </tbody>
+</table>
+
+
+
+<script>
+    let reviewPoll = null;
+
+    async function loadReviews() {
+        const res = await fetch(`/Review/GetReviewsJson?taskId=${taskId}`);
+        const reviews = await res.json();
+        updateReviewTable(reviews);
+    }
+
+    function updateReviewTable(reviews) {
+        const tbody = document.getElementById("review-body");
+        tbody.innerHTML = "";
+
+        if (reviews.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="4" class="text-center">No reviews yet.</td></tr>`;
+            return;
+        }
+
+        reviews.forEach(review => {
+            const row = document.createElement("tr");
+
+            // Build star rating
+            let stars = '';
+            for (let i = 1; i <= 5; i++) {
+                stars += i <= review.rating
+                    ? '<span class="text-warning">★</span>'
+                    : '<span class="text-muted">☆</span>';
+            }
+
+            row.innerHTML = `
+                <td>${review.reviewerType}</td>
+                <td>${review.reviewerName}</td>
+                <td>${stars}</td>
+                <td>${review.comment}</td>
+                <td>${new Date(review.reviewDate).toLocaleString()}</td>
+            `;
+            tbody.appendChild(row);
+        });
+    }
+
+    function startReviewPolling() {
+        if (!reviewPoll) {
+            loadReviews(); // initial
+            reviewPoll = setInterval(loadReviews, 15000); // svakih 15 sekundi
+        }
+    }
+
+    function stopReviewPolling() {
+        if (reviewPoll) {
+            clearInterval(reviewPoll);
+            reviewPoll = null;
+        }
+    }
+
+    // Auto start/stop based on tab visibility
+    document.addEventListener("visibilitychange", () => {
+        if (document.visibilityState === "visible") {
+            startReviewPolling();
+        } else {
+            stopReviewPolling();
+        }
+    });
+
+    
+    if (document.visibilityState === "visible") {
+        startReviewPolling();
+    }
+
+
+
+    async function markAsFinished(taskId) {
+        const res = await fetch('/Task/MarkFinished', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(taskId)
+        });
+
+        if (res.ok) {
+            const result = await res.json();
+            document.getElementById("task-status-text").innerText = result.newStatus;
+
+            //Gumb za onemogućavanje po želji
+            const btn = document.getElementById("finish-btn");
+            if (btn) {
+                btn.remove();
+            }
+
+            // Opcionalno prikaži novu radnju (kao što je odobrenje klijenta)
+            document.getElementById("task-status-msg").innerHTML =  `<em>Waiting for client approval...</em>`;
+        }
+    }
+
+    async function approveCompletion(taskId) {
+        const res = await fetch('/Task/ApproveCompletion', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(taskId)
+        });
+
+        if (res.ok) {
+            const result = await res.json();
+            document.getElementById("task-status-text").innerText = result.newStatus;
+
+            const btn = document.getElementById("complete-btn");
+            if (btn) {
+                btn.remove();
+            }
+
+            const invoiceBtn = document.getElementById("invoice-download-btn");
+            if (invoiceBtn) {
+                invoiceBtn.classList.remove("d-none");
+                invoiceBtn.classList.add("d-block");
+            }
+            document.getElementById("task-status-msg").innerHTML = `<em>Task completed. Invoice available to download.</em>`;
+        }
+    }
+</script>
+

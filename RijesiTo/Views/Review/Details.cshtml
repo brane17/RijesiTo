@@ -1,0 +1,31 @@
+﻿@using RijesiTo.ViewModels
+@model ReviewViewModel
+@{
+    ViewData["Title"] = "Review Details";
+}
+
+<h2>Review Details</h2>
+
+<dl class="row">
+    <dt class="col-sm-3">Reviewer</dt>
+    <dd class="col-sm-9">@Model.ReviewerName</dd>
+
+
+    <dt class="col-sm-3">Rating</dt>
+    <dd class="col-sm-9">
+        @for (int i = 1; i <= 5; i++)
+        {
+            <span class="@(i <= Model.Rating ? "text-warning" : "text-muted")">
+                @(i <= Model.Rating ? "★" : "☆")
+            </span>
+        }
+    </dd>
+
+    <dt class="col-sm-3">Comment</dt>
+    <dd class="col-sm-9">@Model.Comment</dd>
+
+    <dt class="col-sm-3">Date</dt>
+    <dd class="col-sm-9">@Model.ReviewDate.ToString("g")</dd>
+</dl>
+
+<a asp-action="Index" class="btn btn-secondary">Back</a>
